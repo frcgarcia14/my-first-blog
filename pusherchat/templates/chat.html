@@ -1,0 +1,235 @@
+
+<html>
+    <head>
+        <title>
+        </title>
+    </head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//js.pusher.com/4.0/pusher.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.js"></script>
+    <style>
+.container {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translateX(-50%) translateY(-50%);}
+.chat
+{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.chat li
+{
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dotted #B3A9A9;
+}
+
+.chat li.left .chat-body
+{
+    margin-left: 60px;
+}
+
+.chat li.right .chat-body
+{
+    margin-right: 60px;
+}
+
+.chat li .chat-body p
+{
+    margin: 0;
+    color: #777777;
+}
+
+.panel .slidedown .glyphicon, .chat .glyphicon
+{
+    margin-right: 5px;
+}
+
+.panel-body
+{
+    overflow-y: scroll;
+    height: 500px;
+    /*width: 500px;*/
+}
+
+::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar
+{
+    width: 12px;
+    background-color: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #555;
+}
+.btn-group button {
+    background-color: #4CAF50; /* Green background */
+    border: 1px solid green; /* Green border */
+    color: white; /* White text */
+    padding: 10px 24px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    width: 100%; /* Set a width if needed */
+    display: block; /* Make the buttons appear below each other */
+}
+
+.btn-group button:not(:last-child) {
+    border-bottom: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+    background-color: #3e8e41;
+}
+.center {
+    margin: auto;
+    width: 100%;
+    padding: 20px;
+}
+    </style>
+    <body background="http://botsfortelegram.com/media/wallpaper-telegram.png">
+      <div>
+      <button class="btn btn-default"><a href="/">Back to Green Wall Home Page</a></button>
+      </div>
+      <div class="container">
+         <div class="row">
+             <div class="col-md-8">
+                 <div class="panel panel-primary">
+                     <div class="panel-heading">
+                         <span class="glyphicon glyphicon-comment"></span> Chat
+                     </div>
+                     <div class="panel-body">
+                 <!-- ul element holding chat messages -->
+                        <div style="width: 80%; float:left">
+                            <!-- #left content in here -->
+                            <ul class="chat" id="chat1">
+                            </ul>
+                        </div>
+
+                        <div style="width: 20%; float:right">
+                            <!-- #right content in there -->
+                            <ul class="chat" id="chat2">
+                            </ul>
+                        </div>
+                     </div>
+                     <div class="panel-footer">
+                         <div class="input-group">
+             <!-- text imput for the messages to be typed into -->
+                             <input id="btn-input" class="form-control input-sm" placeholder="Type your message here..." type="text">
+                             <span class="input-group-btn">
+             <!--- send button for the chat box -->
+                                 <button class="btn btn-warning btn-sm" id="btn-chat">
+                                     Send</button>
+                             </span>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             <div class="col-md-3">
+               <div class="panel panel-primary">
+                 <div class="panel-heading">
+                     <span class="glyphicon glyphicon-comment"></span> ChatRooms
+                 </div>
+                 <div class="panel-body">
+             <!-- ul element holding chat messages -->
+                <div class="center">
+                    <div class="btn-group">
+                      {% for chatroom_name in chatroom_names %}
+                      <button>{{ chatroom_name }}</button>
+                      {% endfor %}
+                    </div>
+                </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+
+    <script>
+    //var csrftoken = Cookies.get('csrftoken');
+    //var csrf = '{{ csrf_token }}';
+    //initiate pusher with your application key
+    //var csrftoken = csrftoken
+
+
+    var pusher = new Pusher('1f11d5e0f64bd140f127', {
+              cluster: 'us2',
+              authEndpoint: '{% url 'pusherauth' %}',
+              auth: {
+                headers: {
+                  'X-CSRFToken': '{{ csrf_token }}'
+                }
+              }
+    });
+    //subscribe to the channel you want to listen to
+    var my_channel = pusher.subscribe('presence-a_channel');
+
+
+    my_channel.bind('pusher:subscription_succeeded', function() {
+      my_channel.members.each(function(member) {
+        var userId = member.id;
+        var userInfo =  `<li>`+member.info.username+`</li>`;
+        $('#chat2').append(userInfo);
+      });
+    });
+
+    //wait for an event to be triggered in that channel
+    my_channel.bind("an_event", function (data) {
+        // declare a variable new_message to hold the new chat messages
+        var new_message = `<li class="left clearfix"><span class="chat-img pull-left">
+                            <img src="http://placehold.it/70/55C1E7/fff&text='`+data.name+`'" alt="User Avatar" class="img-circle">
+                        </span>
+                            <div class="chat-body clearfix">
+                                <div class="header">
+                                    <strong class="primary-font">`+data.name+`</strong> <small class="pull-right text-muted">
+                                </div>
+                                <p class="primary-font" style="font-size:110%;"">
+                                   <strong class="primary-font">`+data.message+`</strong>
+                                </p>
+                            </div>
+                        </li>`;
+     //append the new message to the ul holding the chat messages
+    $('#chat1').append(new_message);
+    });
+    //wait until the DOM is fully ready
+    $(document).ready(function(){
+    //add event listener to the chat button click
+    // press enter activate buttom
+    $("#btn-input").keyup(function(event){
+      if(event.keyCode == 13){
+          $("#btn-chat").click();
+      }
+    });
+        $("#btn-chat").click(function(){
+    //get the currently typed message
+             var message = $('#btn-input').val();
+
+            $.post({
+                url: '/ajax/chat/',
+                data: {
+                'name': '{{ user.get_username }}',
+                'message': message
+                },
+                success: function (data) {
+
+                    $('#btn-input').val('');
+
+                }
+            });
+
+        })
+    })
+
+
+  </script>
+</body>
+</html>
